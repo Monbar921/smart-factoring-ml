@@ -40,3 +40,9 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Python ###
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/

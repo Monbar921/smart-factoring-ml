@@ -1,0 +1,251 @@
+openapi: 3.1.0
+info:
+  title: Smart Factoring — сервис моделей
+  version: "1.0"
+  description: |
+    Инференс моделей PD покупателя и задержки оплаты по УПД (блок 4 BRD, п. 4.2–4.5).
+    Сервис stateless (Р-20): backend присылает сырые данные (Р-22), признаки сервис считает тем же кодом,
+    что при обучении. Все запросы пачками (НФР-1.2). Деньги — рубли, доли — в долях единицы, даты — ISO.
+
+    Поведение по отсутствию данных (п. 4.5):
+    - нет отчётности за последний год, выручка ниже порога модели или компания моложе года →
+      базовый PD по отрасли и размеру, `pd_source = BASE`, `low_data = true`;
+    - у покупателя нет ни одного оплаченного УПД на дату расчёта ни у одного клиента →
+      `status = NO_PAYMENT_HISTORY`, вероятности не заполняются;
+    - у пары «клиент — покупатель» нет оплаченных УПД, а у покупателя есть → оценка по дисциплине
+      покупателя, `no_pair_history = true`;
+    - ошибка по отдельному элементу → `status = ERROR` у элемента, остальные элементы считаются.
+servers:
+  - url: http://smart-factoring-ml:8000
+paths:
+  /v1/health:
+    get:
+      operationId: health
+      responses:
+        "200":
+          description: Сервис работает, модели загружены
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, enum: [UP] }
+  /v1/models:
+    get:
+      operationId: models
+      responses:
+        "200":
+          description: Версии загруженных моделей (НФР-6)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModelsInfo" }
+  /v1/pd/score:
+    post:
+      operationId: scorePd
+      summary: PD покупателей на 12 месяцев, базовый PD, три причины
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PdRequest" }
+      responses:
+        "200":
+          description: По элементу на каждого покупателя запроса, в том же порядке
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PdResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+  /v1/delay/score:
+    post:
+      operationId: scoreDelay
+      summary: Вероятность задержки и просрочки 90+ по УПД
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DelayRequest" }
+      responses:
+        "200":
+          description: По элементу на каждый УПД запроса, в том же порядке
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DelayResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+components:
+  responses:
+    BadRequest:
+      description: Запрос не прошёл проверку (например, неподдерживаемый порог задержки)
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code, message]
+            properties:
+              code: { type: string }
+              message: { type: string }
+  schemas:
+    ModelsInfo:
+      type: object
+      required: [pd, delay, supported_delay_thresholds]
+      properties:
+        pd: { $ref: "#/components/schemas/ModelVersion" }
+        delay: { $ref: "#/components/schemas/ModelVersion" }
+        supported_delay_thresholds:
+          type: array
+          items: { type: integer }
+          example: [7, 14, 30]
+    ModelVersion:
+      type: object
+      required: [version]
+      properties:
+        version: { type: string, example: "pd-2026.10.1" }
+        trained_at: { type: string, format: date }
+        stub: { type: boolean, description: "true — заглушка, не обученная модель" }
+
+    Buyer:
+      type: object
+      required: [inn]
+      properties:
+        inn: { type: string, example: "0277120989" }
+        okved: { type: string, nullable: true }
+        okved_section: { type: string, nullable: true }
+        region: { type: string, nullable: true }
+        registration_date: { type: string, format: date, nullable: true }
+        financials:
+          type: array
+          description: Отчётность ГИР БО по годам, не позже даты снимка
+          items: { $ref: "#/components/schemas/Financials" }
+    Financials:
+      type: object
+      required: [year]
+      description: Строки форм, рубли; любая может быть null
+      properties:
+        year: { type: integer }
+        simplified: { type: boolean }
+        assets_total: { type: number, description: "1600" }
+        current_assets: { type: number, description: "1200" }
+        receivables: { type: number, description: "1230" }
+        cash: { type: number, description: "1250" }
+        equity: { type: number, description: "1300" }
+        long_term_borrowings: { type: number, description: "1410" }
+        short_term_liabilities: { type: number, description: "1500" }
+        short_term_borrowings: { type: number, description: "1510" }
+        payables: { type: number, description: "1520" }
+        revenue: { type: number, description: "2110" }
+        cost_of_sales: { type: number, description: "2120" }
+        sales_profit: { type: number, description: "2200" }
+        interest_payable: { type: number, description: "2330" }
+        net_profit: { type: number, description: "2400" }
+
+    PdRequest:
+      type: object
+      required: [calc_date, buyers]
+      properties:
+        calc_date: { type: string, format: date }
+        buyers:
+          type: array
+          items: { $ref: "#/components/schemas/Buyer" }
+    PdResponse:
+      type: object
+      required: [model_version, results]
+      properties:
+        model_version: { type: string }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/PdResult" }
+    PdResult:
+      type: object
+      required: [inn, status]
+      properties:
+        inn: { type: string }
+        status: { type: string, enum: [SCORED, ERROR] }
+        pd: { type: number, description: "Вероятность дефолта на 12 месяцев", example: 0.03 }
+        pd_source: { type: string, enum: [MODEL, BASE] }
+        low_data: { type: boolean }
+        low_data_reason:
+          type: string
+          nullable: true
+          enum: [NO_RECENT_REPORT, LOW_REVENUE, YOUNG_COMPANY]
+        reasons:
+          type: array
+          maxItems: 3
+          description: Три главные причины по вкладу (п. 4.4); у базового PD — причины базового расчёта
+          items: { $ref: "#/components/schemas/Reason" }
+        error: { type: string, nullable: true }
+    Reason:
+      type: object
+      required: [feature, title, direction, contribution]
+      properties:
+        feature: { type: string, example: "current_ratio" }
+        title: { type: string, example: "Текущая ликвидность" }
+        value: { type: number, nullable: true, example: 0.84 }
+        direction: { type: string, enum: [INCREASES_RISK, DECREASES_RISK] }
+        contribution: { type: number, description: "Вклад в логит (SHAP), по модулю — сила", example: 0.42 }
+
+    DelayRequest:
+      type: object
+      required: [calc_date, delay_threshold_days, upds, history]
+      properties:
+        calc_date: { type: string, format: date }
+        delay_threshold_days: { type: integer, enum: [7, 14, 30] }
+        buyers:
+          type: array
+          description: Профиль и отчётность покупателей из upds (дни оборота кредиторки, отрасль)
+          items: { $ref: "#/components/schemas/Buyer" }
+        upds:
+          type: array
+          description: Открытые УПД для оценки
+          items: { $ref: "#/components/schemas/DelayUpd" }
+        history:
+          type: array
+          description: |
+            Все УПД покупателей из upds у всех клиентов на дату расчёта — оплаченные и открытые
+            (п. 3.11): платёжная дисциплина покупателя, история пары, тренд, типичная сумма пары
+          items: { $ref: "#/components/schemas/HistoryUpd" }
+    DelayUpd:
+      type: object
+      required: [upd_id, client_inn, buyer_inn, buyer_pd, amount, outstanding, upd_date, planned_due_date, deferral_days]
+      properties:
+        upd_id: { type: string, description: "Id УПД backend, возвращается в ответе" }
+        number: { type: string, description: "Номер УПД - для журнала и заглушки, в модели не используется" }
+        client_inn: { type: string }
+        client_industry: { type: string, nullable: true }
+        buyer_inn: { type: string }
+        buyer_pd: { type: number, description: "PD покупателя из /v1/pd/score (шаг А)" }
+        amount: { type: number }
+        outstanding: { type: number }
+        upd_date: { type: string, format: date }
+        planned_due_date: { type: string, format: date }
+        deferral_days: { type: integer }
+    HistoryUpd:
+      type: object
+      required: [client_inn, buyer_inn, amount, upd_date, planned_due_date, status]
+      properties:
+        client_inn: { type: string }
+        buyer_inn: { type: string }
+        amount: { type: number }
+        upd_date: { type: string, format: date }
+        planned_due_date: { type: string, format: date }
+        status: { type: string, enum: [PAID, OPEN] }
+        paid_date: { type: string, format: date, nullable: true, description: "Для PAID — дата полной оплаты" }
+        outstanding: { type: number, description: "Для OPEN — неоплаченный остаток" }
+    DelayResponse:
+      type: object
+      required: [model_version, results]
+      properties:
+        model_version: { type: string }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/DelayResult" }
+    DelayResult:
+      type: object
+      required: [upd_id, status]
+      properties:
+        upd_id: { type: string }
+        status: { type: string, enum: [SCORED, NO_PAYMENT_HISTORY, ERROR] }
+        p_delay: { type: number, description: "P(оплата позже плановой даты больше чем на delay_threshold_days)" }
+        p_overdue_90: { type: number, description: "P(просрочка больше 90 дней)" }
+        expected_delay_days: { type: number, description: "Ожидаемые дни задержки, >= 0" }
+        no_pair_history: { type: boolean }
+        error: { type: string, nullable: true }
