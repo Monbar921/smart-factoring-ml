@@ -19,6 +19,24 @@
 2. Задать переменные `PD_MODEL_MODULE=app.models.pd_trained`, `DELAY_MODEL_MODULE=app.models.delay_trained`.
 3. В backend включить `ML_MODE=http`, `ML_BASE_URL=http://smart-factoring-ml:8000`.
 
+## LLM (GigaChat) — только через backend
+
+Сервис моделей не ходит в GigaChat напрямую: ключ, токен, лимит одновременных запросов и выбор модели — в backend.
+Если модели нужна LLM, вызывайте её через [service/app/llm.py](service/app/llm.py):
+
+```python
+from app.llm import backend_llm, LlmUnavailable
+
+try:
+    text = backend_llm().chat([{"role": "system", "content": "..."}, {"role": "user", "content": "..."}],
+                              temperature=0.2, max_tokens=300).content
+except LlmUnavailable:
+    text = None  # LLM выключена в backend (LLM_MODE не gigachat) или недоступна — работаем без неё
+```
+
+Адрес — `BACKEND_LLM_URL`, по умолчанию `http://backend:8080/internal/llm/v1` (сеть стенда). Контракт —
+`docs/claude/module-0/backend-api.md` в smart-factoring-backend, раздел «LLM для сервиса моделей».
+
 ## Запуск
 
 ```bash
