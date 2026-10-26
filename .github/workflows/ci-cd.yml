@@ -1,0 +1,158 @@
+name: CI/CD
+
+# Логика по событиям (как у smart-factoring-backend / gateway / ui):
+#   pull request в main/test -> тесты
+#   push в main/test         -> + образ в ghcr.io (теги: <short sha>, <ветка>, для main ещё latest)
+#                               + repository_dispatch в deploy-репозиторий, который раскатывает образ на VDS
+#                                 (ветка передаётся в payload, по ней deploy-репозиторий выбирает окружение)
+#
+# Настройки репозитория (Settings -> Secrets and variables -> Actions):
+#   vars.DEPLOY_REPO     - deploy-репозиторий, owner/name
+#   secrets.DEPLOY_TOKEN - fine-grained PAT с доступом только к DEPLOY_REPO, Contents: Read and write
+on:
+  push:
+    branches: [ "main", "test" ]
+  pull_request:
+    branches: [ "main", "test" ]
+  workflow_dispatch:
+
+# новый push в ту же ветку/PR отменяет незавершённую сборку предыдущего
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+  # та же версия, что в образе (Dockerfile)
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Tests
+        working-directory: service
+        run: python -m pytest -q
+
+  image:
+    name: Build & push image
+    needs: test
+    if: >-
+      github.event_name != 'pull_request' &&
+      contains(fromJSON('["refs/heads/main", "refs/heads/test"]'), github.ref)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.name.outputs.name }}
+      tag: ${{ steps.name.outputs.tag }}
+      digest: ${{ steps.push.outputs.digest }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # ghcr.io принимает имена только в нижнем регистре
+      - name: Image name and tag
+        id: name
+        run: |
+          echo "name=${REGISTRY}/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+          echo "tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ steps.name.outputs.name }}
+          tags: |
+            type=raw,value=${{ steps.name.outputs.tag }}
+            type=ref,event=branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # образ стартует и отвечает на healthcheck: модели загружаются при старте, ошибка в них видна здесь
+      - name: Smoke test image
+        env:
+          IMAGE: ${{ steps.name.outputs.name }}:${{ steps.name.outputs.tag }}
+        run: |
+          docker run -d --name ml -p 8000:8000 "$IMAGE"
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/v1/health; then echo; docker rm -f ml > /dev/null; exit 0; fi
+            sleep 1
+          done
+          docker logs ml
+          exit 1
+
+  deploy:
+    name: Trigger deploy
+    needs: image
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      # GITHUB_TOKEN не даёт прав на другие репозитории, поэтому отдельный DEPLOY_TOKEN.
+      # Передаём неизменяемый тег (sha) и digest, а не latest: на VDS едет ровно проверенная сборка,
+      # откат - повторный dispatch со старым тегом
+      - name: Dispatch to deploy repository
+        env:
+          GH_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+          DEPLOY_REPO: ${{ vars.DEPLOY_REPO }}
+          IMAGE: ${{ needs.image.outputs.image }}
+          TAG: ${{ needs.image.outputs.tag }}
+          DIGEST: ${{ needs.image.outputs.digest }}
+        run: |
+          if [ -z "$DEPLOY_REPO" ] || [ -z "$GH_TOKEN" ]; then
+            echo "::error::Не заданы vars.DEPLOY_REPO и/или secrets.DEPLOY_TOKEN"
+            exit 1
+          fi
+          jq -n \
+            --arg service "${GITHUB_REPOSITORY#*/}" \
+            --arg image "$IMAGE" \
+            --arg tag "$TAG" \
+            --arg digest "$DIGEST" \
+            --arg sha "$GITHUB_SHA" \
+            --arg branch "$GITHUB_REF_NAME" \
+            '{event_type: "deploy", client_payload: {service: $service, branch: $branch, image: $image, tag: $tag, digest: $digest, sha: $sha}}' \
+          | gh api "repos/${DEPLOY_REPO}/dispatches" --input -
+          echo "Dispatched ${IMAGE}:${TAG} (${GITHUB_REF_NAME}) to ${DEPLOY_REPO}" >> "$GITHUB_STEP_SUMMARY"

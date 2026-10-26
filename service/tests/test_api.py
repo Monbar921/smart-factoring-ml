@@ -15,7 +15,7 @@ WEAK_2025 = {**FINANCIALS_2025, "equity": -1.2e8, "net_profit": -8e7, "cash": 3e
 
 
 def test_health_and_versions():
-    assert client.get("/v1/health").json() == {"status": "UP"}
+    assert client.get("/v1/health").json() == {"status": "UP", "pd": "pd-heuristic-1", "delay": "delay-heuristic-1"}
     models = client.get("/v1/models").json()
     assert models["pd"]["version"] == "pd-heuristic-1"
     assert models["supported_delay_thresholds"] == [7, 14, 30]

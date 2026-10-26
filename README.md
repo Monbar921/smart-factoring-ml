@@ -46,4 +46,27 @@ cd service && ../.venv/Scripts/python -m pytest -q
 ../.venv/Scripts/python -m uvicorn app.main:app --port 8000
 ```
 
-Docker: `docker build -t smart-factoring-ml .` → порт 8000, healthcheck `/v1/health`.
+Docker: `docker build -t smart-factoring-ml .` → порт 8000, healthcheck `/v1/health`, процесс не от root.
+
+## Эксплуатация
+
+| Переменная | По умолчанию | Смысл |
+|---|---|---|
+| `WEB_CONCURRENCY` | `1` | процессов uvicorn (оценки считаются на CPU — не больше выделенных ядер) |
+| `LOG_LEVEL` | `INFO` | `DEBUG` — ещё и строка на каждую пачку |
+| `ML_MAX_BATCH` | `2000` | элементов в пачке, больше — `413 BATCH_TOO_LARGE` (backend шлёт по 200) |
+| `PD_MODEL_MODULE`, `DELAY_MODEL_MODULE` | пусто | обученные модели, см. выше; пусто — эвристики |
+| `BACKEND_LLM_URL` | `http://backend:8080/internal/rest/llm` | LLM через backend |
+
+- Модели загружаются при старте: если модуль из `PD_MODEL_MODULE` / `DELAY_MODEL_MODULE` не загрузился, процесс
+  завершается с ошибкой (на стенде контейнер не станет healthy, deploy упадёт), а не отвечает молча эвристиками.
+- `/v1/health` — `{"status": "UP", "pd": "<версия>", "delay": "<версия>"}`.
+- Лог: строка на запрос с длительностью и `X-Request-ID` (из запроса или новый, возвращается в ответе).
+- Объём демо (100 клиентов, 1 500 открытых УПД): шаг оценки прогона backend < 1 с, пачка 200 УПД — до 70 мс.
+
+## CI/CD и деплой
+
+[.github/workflows/ci-cd.yml](.github/workflows/ci-cd.yml): PR в `main`/`test` — тесты; push — ещё образ
+`ghcr.io/monbar921/smart-factoring-ml:<short sha>` (и тег ветки), smoke-проверка `/v1/health` и `repository_dispatch`
+в smart-factoring-deploy, как у остальных сервисов. В репозитории нужны `vars.DEPLOY_REPO` и `secrets.DEPLOY_TOKEN`.
+На стенде сервис `ml` без внешних портов, backend ходит в него по `http://ml:8000` (`ML_MODE=http`).
