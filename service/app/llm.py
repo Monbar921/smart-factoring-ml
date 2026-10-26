@@ -1,7 +1,7 @@
 """LLM для моделей - только через backend (Р-48).
 
 Сервис моделей не ходит в GigaChat напрямую: ключ, токен, предел одновременных запросов и выбор модели - в backend
-(POST /internal/llm/v1/chat/completions, доступен только из сети стенда).
+(POST /internal/rest/llm/chat/completions - backend напрямую по сети стенда, не через gateway).
 
     from app.llm import backend_llm, LlmUnavailable
 
@@ -12,7 +12,7 @@
     except LlmUnavailable:
         text = None  # LLM выключена (LLM_MODE в backend не gigachat) или недоступна - работаем без неё
 
-Адрес - BACKEND_LLM_URL, по умолчанию http://backend:8080/internal/llm/v1.
+Адрес - BACKEND_LLM_URL, по умолчанию http://backend:8080/internal/rest/llm.
 """
 
 import json
@@ -22,7 +22,7 @@ import urllib.request
 from dataclasses import dataclass
 from functools import lru_cache
 
-DEFAULT_URL = "http://backend:8080/internal/llm/v1"
+DEFAULT_URL = "http://backend:8080/internal/rest/llm"
 # GigaChat с повторами в backend может отвечать десятки секунд
 DEFAULT_TIMEOUT_S = 120
 

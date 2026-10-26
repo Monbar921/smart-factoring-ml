@@ -8,7 +8,7 @@ from app.llm import BackendLlm, LlmError, LlmUnavailable
 
 
 class FakeBackend(BaseHTTPRequestHandler):
-    """POST /internal/llm/v1/chat/completions как в backend: ответ задаётся в server.reply = (status, body)."""
+    """POST /internal/rest/llm/chat/completions как в backend: ответ задаётся в server.reply = (status, body)."""
 
     def do_POST(self):
         self.server.requests.append((self.path, json.loads(self.rfile.read(int(self.headers["Content-Length"])))))
@@ -36,7 +36,7 @@ def backend():
 
 
 def client(server) -> BackendLlm:
-    return BackendLlm(f"http://127.0.0.1:{server.server_port}/internal/llm/v1", timeout_s=5)
+    return BackendLlm(f"http://127.0.0.1:{server.server_port}/internal/rest/llm", timeout_s=5)
 
 
 def test_chat_goes_to_backend(backend):
@@ -49,7 +49,7 @@ def test_chat_goes_to_backend(backend):
     assert answer.model == "GigaChat"
     assert answer.finish_reason == "stop"
     assert (answer.prompt_tokens, answer.completion_tokens) == (12, 3)
-    assert backend.requests == [("/internal/llm/v1/chat/completions",
+    assert backend.requests == [("/internal/rest/llm/chat/completions",
                                  {"messages": [{"role": "user", "content": "Оцени"}], "temperature": 0.2, "maxTokens": 100})]
 
 
@@ -74,6 +74,6 @@ def test_invalid_request_is_error(backend):
 
 def test_unreachable_backend_is_unavailable():
     with pytest.raises(LlmUnavailable) as error:
-        BackendLlm("http://127.0.0.1:9/internal/llm/v1", timeout_s=2).chat([{"role": "user", "content": "x"}])
+        BackendLlm("http://127.0.0.1:9/internal/rest/llm", timeout_s=2).chat([{"role": "user", "content": "x"}])
 
     assert error.value.code == "BACKEND_UNREACHABLE"

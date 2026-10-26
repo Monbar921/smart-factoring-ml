@@ -34,7 +34,7 @@ except LlmUnavailable:
     text = None  # LLM выключена в backend (LLM_MODE не gigachat) или недоступна — работаем без неё
 ```
 
-Адрес — `BACKEND_LLM_URL`, по умолчанию `http://backend:8080/internal/llm/v1` (сеть стенда). Контракт —
+Адрес — `BACKEND_LLM_URL`, по умолчанию `http://backend:8080/internal/rest/llm` (сеть стенда). Контракт —
 `docs/claude/module-0/backend-api.md` в smart-factoring-backend, раздел «LLM для сервиса моделей».
 
 ## Запуск
