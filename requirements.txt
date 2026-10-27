@@ -1,3 +1,7 @@
 fastapi==0.162.0
 uvicorn==0.54.0
 pydantic==2.14.1
+# обученные модели PD и задержки (app/models/pd, app/models/delay): версии, на которых их обучали
+numpy==2.5.3
+pandas==3.0.5
+lightgbm==4.7.0

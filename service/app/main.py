@@ -66,13 +66,18 @@ def models() -> ModelsInfo:
 def score_pd(request: PdRequest) -> PdResponse:
     check_batch(len(request.buyers))
     model = pd_model()
-    results = []
-    for buyer in request.buyers:
-        try:
-            results.extend(model.score([buyer], request.calc_date))
-        except Exception as error:  # noqa: BLE001 - ошибка одного покупателя не роняет пачку
-            log.exception("PD %s", buyer.inn)
-            results.append(PdResult(inn=buyer.inn, status="ERROR", error=str(error)))
+    try:
+        # пачка целиком - обученные модели считают её одним вызовом
+        results = model.score(request.buyers, request.calc_date)
+    except Exception:  # noqa: BLE001 - тогда по одному: ошибка одного покупателя не роняет пачку
+        log.exception("PD: пачка целиком не оценена, оцениваю по одному")
+        results = []
+        for buyer in request.buyers:
+            try:
+                results.extend(model.score([buyer], request.calc_date))
+            except Exception as error:  # noqa: BLE001
+                log.exception("PD %s", buyer.inn)
+                results.append(PdResult(inn=buyer.inn, status="ERROR", error=str(error)))
     log_batch("PD", results)
     return PdResponse(model_version=model.version, results=results)
 
@@ -83,13 +88,18 @@ def score_delay(request: DelayRequest) -> DelayResponse:
         raise HTTPException(status_code=400, detail={"code": "UNSUPPORTED_THRESHOLD", "message": "порог 7, 14 или 30"})
     check_batch(len(request.upds))
     model = delay_model()
-    results = []
-    for upd in request.upds:
-        try:
-            results.extend(model.score(request.model_copy(update={"upds": [upd]})))
-        except Exception as error:  # noqa: BLE001
-            log.exception("Задержка %s", upd.upd_id)
-            results.append(DelayResult(upd_id=upd.upd_id, status="ERROR", error=str(error)))
+    try:
+        # пачка целиком: история пары и покупателя строится один раз на пачку
+        results = model.score(request)
+    except Exception:  # noqa: BLE001 - тогда по одному: ошибка одного УПД не роняет пачку
+        log.exception("Задержка: пачка целиком не оценена, оцениваю по одному")
+        results = []
+        for upd in request.upds:
+            try:
+                results.extend(model.score(request.model_copy(update={"upds": [upd]})))
+            except Exception as error:  # noqa: BLE001
+                log.exception("Задержка %s", upd.upd_id)
+                results.append(DelayResult(upd_id=upd.upd_id, status="ERROR", error=str(error)))
     log_batch("Задержка", results)
     return DelayResponse(model_version=model.version, results=results)
 

@@ -166,7 +166,8 @@ components:
         low_data_reason:
           type: string
           nullable: true
-          enum: [NO_RECENT_REPORT, LOW_REVENUE, YOUNG_COMPANY]
+          enum: [NO_RECENT_REPORT, LOW_REVENUE, YOUNG_COMPANY, EXCLUDED_INDUSTRY]
+          description: "EXCLUDED_INDUSTRY - разделы ОКВЭД K и O, на которых модель PD не обучена"
         reasons:
           type: array
           maxItems: 3
@@ -208,9 +209,12 @@ components:
       required: [upd_id, client_inn, buyer_inn, buyer_pd, amount, outstanding, upd_date, planned_due_date, deferral_days]
       properties:
         upd_id: { type: string, description: "Id УПД backend, возвращается в ответе" }
-        number: { type: string, description: "Номер УПД - для журнала и заглушки, в модели не используется" }
+        number: { type: string, description: "Номер УПД: порядок УПД пары, подписанных в один день (модель задержки)" }
         client_inn: { type: string }
-        client_industry: { type: string, nullable: true }
+        client_industry:
+          type: string
+          nullable: true
+          description: "Отрасль клиента: CONSTRUCTION / PROFESSIONAL / MANUFACTURING / TRADE (признак модели задержки)"
         buyer_inn: { type: string }
         buyer_pd: { type: number, description: "PD покупателя из /v1/pd/score (шаг А)" }
         amount: { type: number }
@@ -222,6 +226,8 @@ components:
       type: object
       required: [client_inn, buyer_inn, amount, upd_date, planned_due_date, status]
       properties:
+        upd_id: { type: string, nullable: true, description: "Id УПД backend; совпадает с DelayUpd.upd_id у оцениваемых УПД" }
+        number: { type: string, nullable: true, description: "Номер УПД" }
         client_inn: { type: string }
         buyer_inn: { type: string }
         amount: { type: number }
