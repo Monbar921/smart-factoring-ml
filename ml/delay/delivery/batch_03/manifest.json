@@ -1,0 +1,50 @@
+{
+  "contract_version": "1.0",
+  "batch_id": "batch_03",
+  "D_end": "2025-12-30",
+  "seed": 2396189424,
+  "generator_version": "gen-1.0",
+  "rfsd_version": "rfsd:ca3665997c977ba8ad01cf93c3e2a74ce7fe9c05",
+  "pd_model_version": "pd-1.0",
+  "delay_model_version": "delay-1.0",
+  "counts": {
+    "clients": 100,
+    "buyers_total": 300,
+    "buyers_in_buyers_csv": 297,
+    "contracts": 402,
+    "upd": 23112,
+    "upd_open_at_d_end": 1523,
+    "payments": 24356
+  },
+  "files": {
+    "clients.csv": {
+      "rows": 100,
+      "sha256": "be578cd16bbec58791f94fb24b97f09caddb3306c7da09d2321bfa4e5f5d49b2"
+    },
+    "buyers.csv": {
+      "rows": 297,
+      "sha256": "d5636e40eba29f5fda57591ad65835d40c209a5d4abc2fb3cd656e8cc0cdc81d"
+    },
+    "buyers_status.csv": {
+      "rows": 297,
+      "sha256": "3f894132a3f5b8d09ad310a12f20e330bdafbf42c8ff6ff229346fcdc6c2534f"
+    },
+    "contracts.csv": {
+      "rows": 402,
+      "sha256": "6114b7db9923431cce418a932ab77bff47f56f2b1f2c9bfbd416969986661178"
+    },
+    "upd.csv": {
+      "rows": 23112,
+      "sha256": "d0c456bf21efbd4a6d12e1576d8b2b7d37b2f89a049d0fc047e0686eb73bb8ec"
+    },
+    "payments.csv": {
+      "rows": 24356,
+      "sha256": "5b96567e7ffe41edf82188186bb085279f2b3a56a8899ff2a219dd30906fde6b"
+    },
+    "delay_scores.csv": {
+      "rows": 1185,
+      "sha256": "0aac9b76fc41229ced74139781fddc82cf3b7ee794ee79c248302946b3cb35bb"
+    }
+  },
+  "created_at": "2026-10-27T16:31:04+03:00"
+}

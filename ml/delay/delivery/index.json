@@ -1,0 +1,36 @@
+{
+  "contract_version": "1.0",
+  "D_end": "2025-12-30",
+  "batches": [
+    {
+      "batch_id": "batch_01",
+      "path": "batch_01/",
+      "clients": "CL-0001…CL-0100",
+      "role": "test"
+    },
+    {
+      "batch_id": "batch_02",
+      "path": "batch_02/",
+      "clients": "CL-0101…CL-0200",
+      "role": "test"
+    },
+    {
+      "batch_id": "batch_03",
+      "path": "batch_03/",
+      "clients": "CL-0201…CL-0300",
+      "role": "test"
+    },
+    {
+      "batch_id": "batch_04",
+      "path": "batch_04/",
+      "clients": "CL-0301…CL-0400",
+      "role": "test"
+    },
+    {
+      "batch_id": "batch_05",
+      "path": "batch_05/",
+      "clients": "CL-0401…CL-0500",
+      "role": "test"
+    }
+  ]
+}
