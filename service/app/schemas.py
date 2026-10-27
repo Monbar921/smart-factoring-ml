@@ -67,7 +67,8 @@ class PdResult(BaseModel):
     pd: float | None = None
     pd_source: Literal["MODEL", "BASE"] | None = None
     low_data: bool = False
-    low_data_reason: Literal["NO_RECENT_REPORT", "LOW_REVENUE", "YOUNG_COMPANY"] | None = None
+    # EXCLUDED_INDUSTRY - разделы ОКВЭД K и O: модель PD на них не обучена
+    low_data_reason: Literal["NO_RECENT_REPORT", "LOW_REVENUE", "YOUNG_COMPANY", "EXCLUDED_INDUSTRY"] | None = None
     reasons: list[Reason] = Field(default_factory=list)
     error: str | None = None
 
@@ -92,6 +93,9 @@ class DelayUpd(BaseModel):
 
 
 class HistoryUpd(BaseModel):
+    # id и номер - как у DelayUpd: история содержит и оцениваемые УПД; номер задаёт порядок УПД одного дня
+    upd_id: str | None = None
+    number: str | None = None
     client_inn: str
     buyer_inn: str
     amount: float

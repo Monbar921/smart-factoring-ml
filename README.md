@@ -8,16 +8,37 @@
 - Пока нет обученных моделей, работают эвристики ([service/app/models/heuristic.py](service/app/models/heuristic.py)),
   в `/v1/models` они помечены `stub: true`.
 
-## Как подключить обученные модели
+## Модели
 
-1. Положить модуль, например `service/app/models/pd_trained.py`, с функцией `create()`, которая возвращает объект:
-   - атрибуты `version`, `trained_at`, `stub = False`;
-   - PD: `score(buyers: list[Buyer], calc_date) -> list[PdResult]` — базовый PD и «мало данных» по п. 4.2
-     (готово: `features.low_data_reason`), три причины с направлением (SHAP);
-   - задержка: `score(request: DelayRequest) -> list[DelayResult]` — `NO_PAYMENT_HISTORY`, если у покупателя нет ни одного
-     оплаченного УПД; `no_pair_history`, если нет истории у пары (п. 4.5).
-2. Задать переменные `PD_MODEL_MODULE=app.models.pd_trained`, `DELAY_MODEL_MODULE=app.models.delay_trained`.
-3. В backend включить `ML_MODE=http`, `ML_BASE_URL=http://smart-factoring-ml:8000`.
+В образе по умолчанию — обученные модели коллеги (ветка `feature/SMF-34`, перенесены в `service/app/models`):
+
+| | PD покупателя `pd-1.0` | Задержка оплаты `delay-1.0` |
+|---|---|---|
+| Модуль | `app.models.pd_trained` (`PD_MODEL_MODULE`) | `app.models.delay_trained` (`DELAY_MODEL_MODULE`) |
+| Файлы модели | `app/models/pd/`: `pd_model.pkl`, `pd_features.py`, `pd_model.py`, README | `app/models/delay/`: `delay_model_1_0.pkl`, `dl_common.py`, `dl_model.py`, `alloc.py`, README |
+| Что внутри | LightGBM + калибровка Платта, три причины по SHAP | 4 бустинга (p_7, p_14, p_30, p_90) + регрессия ожидаемых дней |
+
+Значение `heuristic` (или пустое, как в тестах контракта) — эвристики `heuristic.py`.
+
+**PD.** Признаки строятся из отчётности в запросе (строки форм за год отчётности T = год до даты расчёта и два
+предыдущих, в тыс. руб., как при обучении на RFSD), а не по ИНН из хранилища, как `score_inn.py` коллеги.
+Где модель не определена, — базовый PD эвристики по разделу ОКВЭД с пометкой «мало данных»: нет отчётности за прошлый
+год, выручка ниже 120 млн, компания моложе года, разделы ОКВЭД K и O (`EXCLUDED_INDUSTRY`, их не было в обучении).
+Регион переводится в вид RFSD (`moscow city`, `moscow reg.`, `sankt-petersburg`): модель различает только их.
+
+**Задержка.** Переходник JSON → таблицы модели (README модели, «Подключение к сервису»): УПД и даты их закрытия — из
+`history`, как их прислал backend (сверка оплат заново не делается); оплаченная часть = `amount − outstanding`;
+уровень A–D покупателя для признака — по порогам модели 0,4 % / 1,5 % / 6 % (в backend для решения свои пороги);
+коэффициенты покупателя — по последней отчётности из `buyers`; отрасль клиента — `client_industry` (коды backend
+переводятся в значения обучения). Закрытый или просроченный УПД — `ERROR`: модель для него не определена.
+
+**Сверка с эталоном.** На тестовом наборе коллеги (`feature/SMF-35`, партии 01–05, 5 936 УПД на 30.12.2025) переходник
+даёт те же статусы и те же числа, что `delay_scores.csv`: |Δp| ≤ 5·10⁻⁷, |Δ expected_days| ≤ 0,005 — точность самого
+эталона. В тестах — подмножество партии 01 (`service/tests/data/delay_batch01`) и через ядро, и через JSON API.
+
+Новая версия модели — заменить файлы в `app/models/pd` / `app/models/delay` (имена модулей в pickle сопоставляются
+в `app/models/_pickle.py`) и прогнать тесты; другой модуль — свой `create()` с `version`, `trained_at`, `stub = False`
+и `score(...)` как в `registry.py`.
 
 ## LLM (GigaChat) — только через backend
 
@@ -40,10 +61,11 @@ except LlmUnavailable:
 ## Запуск
 
 ```bash
-python -m venv .venv
-.venv/Scripts/python -m pip install -r requirements-dev.txt
-cd service && ../.venv/Scripts/python -m pytest -q
-../.venv/Scripts/python -m uvicorn app.main:app --port 8000
+# Python 3.13, как в образе: под него собраны колёса lightgbm / numpy / pandas, на которых обучали модели
+uv venv --python 3.13 .venv313
+uv pip install --python .venv313/Scripts/python.exe -r requirements-dev.txt
+cd service && ../.venv313/Scripts/python -m pytest -q
+../.venv313/Scripts/python -m uvicorn app.main:app --port 8000
 ```
 
 Docker: `docker build -t smart-factoring-ml .` → порт 8000, healthcheck `/v1/health`, процесс не от root.

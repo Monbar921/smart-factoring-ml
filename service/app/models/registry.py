@@ -1,9 +1,11 @@
 """Какие модели обслуживает сервис.
 
-По умолчанию - эвристики (heuristic.py). Обученные модели подключаются переменными окружения:
+Модели задаются переменными окружения - модуль с функцией create():
 
-    PD_MODEL_MODULE=app.models.pd_trained       # модуль с функцией create() -> модель PD
-    DELAY_MODEL_MODULE=app.models.delay_trained # модуль с функцией create() -> модель задержки
+    PD_MODEL_MODULE=app.models.pd_trained       # обученная модель PD коллеги pd-1.0 (по умолчанию в образе)
+    DELAY_MODEL_MODULE=app.models.delay_trained # обученная модель задержки delay-1.0 (по умолчанию в образе)
+
+Переменная не задана, пустая или heuristic - эвристики (heuristic.py): для локального запуска и тестов контракта.
 
 Модель PD:      атрибуты version, trained_at, stub; метод score(buyers, calc_date) -> list[PdResult]
 Модель задержки: атрибуты version, trained_at, stub; метод score(request: DelayRequest) -> list[DelayResult]
@@ -17,8 +19,8 @@ from .heuristic import HeuristicDelayModel, HeuristicPdModel
 
 
 def _load(variable: str, default):
-    module = os.getenv(variable)
-    if not module:
+    module = (os.getenv(variable) or "").strip()
+    if module in ("", "heuristic"):
         return default()
     return importlib.import_module(module).create()
 
