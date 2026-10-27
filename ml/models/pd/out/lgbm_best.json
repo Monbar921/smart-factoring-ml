@@ -1,0 +1,11 @@
+{
+ "num_leaves": 31.0,
+ "min_child_samples": 50.0,
+ "feature_fraction": 0.5,
+ "lambda_l2": 50.0,
+ "pos_weight": 5.0,
+ "mean_gini": 0.8144148466470358,
+ "std_gini": 0.013668235638765966,
+ "iters": 185.0,
+ "sec": 36.0
+}

@@ -1,0 +1,134 @@
+{
+ "search": {
+  "7": {
+   "config": "B",
+   "params": {
+    "objective": "binary",
+    "learning_rate": 0.04,
+    "num_leaves": 15,
+    "min_child_samples": 800,
+    "subsample": 0.8,
+    "subsample_freq": 1,
+    "colsample_bytree": 0.6,
+    "reg_lambda": 50.0,
+    "seed": 7
+   },
+   "iters": 499,
+   "cv": {
+    "iters": 499,
+    "logloss": 0.5468265084379681,
+    "auc_all": 0.7733783014256274,
+    "auc_sign": 0.7656415933783922,
+    "auc_naive_sign": 0.7294565531552437,
+    "auc_ceiling_sign": 0.7871512854445941
+   }
+  },
+  "14": {
+   "config": "C",
+   "params": {
+    "objective": "binary",
+    "learning_rate": 0.04,
+    "num_leaves": 7,
+    "min_child_samples": 2000,
+    "subsample": 0.8,
+    "subsample_freq": 1,
+    "colsample_bytree": 0.6,
+    "reg_lambda": 50.0,
+    "seed": 7
+   },
+   "iters": 581,
+   "cv": {
+    "iters": 581,
+    "logloss": 0.4673390936989109,
+    "auc_all": 0.7652253831957367,
+    "auc_sign": 0.765360415843941,
+    "auc_naive_sign": 0.7090706109951858,
+    "auc_ceiling_sign": 0.78417194012955
+   }
+  },
+  "30": {
+   "config": "B",
+   "params": {
+    "objective": "binary",
+    "learning_rate": 0.04,
+    "num_leaves": 15,
+    "min_child_samples": 800,
+    "subsample": 0.8,
+    "subsample_freq": 1,
+    "colsample_bytree": 0.6,
+    "reg_lambda": 50.0,
+    "seed": 7
+   },
+   "iters": 215,
+   "cv": {
+    "iters": 215,
+    "logloss": 0.2712013374529051,
+    "auc_all": 0.7620424362502185,
+    "auc_sign": 0.7654468745205869,
+    "auc_naive_sign": 0.6635841053363215,
+    "auc_ceiling_sign": 0.7862610961066807
+   }
+  },
+  "90": {
+   "config": "B",
+   "params": {
+    "objective": "binary",
+    "learning_rate": 0.04,
+    "num_leaves": 15,
+    "min_child_samples": 800,
+    "subsample": 0.8,
+    "subsample_freq": 1,
+    "colsample_bytree": 0.6,
+    "reg_lambda": 50.0,
+    "seed": 7
+   },
+   "iters": 97,
+   "cv": {
+    "iters": 97,
+    "logloss": 0.09115703030325692,
+    "auc_all": 0.7369106163492893,
+    "auc_sign": 0.7366613809549336,
+    "auc_naive_sign": 0.5561301036108568,
+    "auc_ceiling_sign": 0.7679047641161445
+   }
+  }
+ },
+ "calibration": {
+  "7": {
+   "kind": "platt",
+   "logloss": {
+    "none": 0.54691415553877,
+    "platt": 0.5469116934107523,
+    "isotonic": 0.5472261874537523
+   },
+   "oof_auc": 0.7732829914073163
+  },
+  "14": {
+   "kind": "platt",
+   "logloss": {
+    "none": 0.46741211190537746,
+    "platt": 0.46742887119507615,
+    "isotonic": 0.46778995053735745
+   },
+   "oof_auc": 0.7651214198891176
+  },
+  "30": {
+   "kind": "platt",
+   "logloss": {
+    "none": 0.2712386266017241,
+    "platt": 0.27143162981534075,
+    "isotonic": 0.2715625292414895
+   },
+   "oof_auc": 0.7619043914395683
+  },
+  "90": {
+   "kind": "platt",
+   "logloss": {
+    "none": 0.09119964394190545,
+    "platt": 0.09128973177072813,
+    "isotonic": 0.09137712244019375
+   },
+   "oof_auc": 0.7364236162548013
+  }
+ }
+}

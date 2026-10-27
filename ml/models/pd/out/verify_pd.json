@@ -1,0 +1,76 @@
+{
+ "counts_2022_y_B_12m": "OK",
+ "counts_2023_y_B_12m": "OK",
+ "counts_2023_y_B_21m": "OK",
+ "counts_2022_y_A_12m": "OK",
+ "counts_2023_y_A_12m": "OK",
+ "counts_2022_y_0_12m": "OK",
+ "counts_2023_y_0_12m": "OK",
+ "gini_2023_12m_rank_formula": 0.7606,
+ "gini_2023_12m_reported": 0.7606,
+ "gini_match": true,
+ "gini_21m_match": true,
+ "gini_segment_match": true,
+ "levels_2023_12m": {
+  "A": [
+   128855,
+   263,
+   0.00204
+  ],
+  "B": [
+   46831,
+   449,
+   0.00959
+  ],
+  "C": [
+   18750,
+   483,
+   0.02576
+  ],
+  "D": [
+   9238,
+   1328,
+   0.14375
+  ]
+ },
+ "levels_monotonic": true,
+ "leak_columns_in_extract_2022": [],
+ "model_features": [
+  "log_revenue",
+  "log_assets",
+  "age",
+  "net_margin",
+  "debt_to_revenue",
+  "receivables_days",
+  "payables_days",
+  "equity_change_1y",
+  "interest_coverage",
+  "revenue_growth_1y",
+  "cash_ratio",
+  "current_ratio",
+  "equity_ratio",
+  "current_ratio_change_1y",
+  "revenue_growth_2y",
+  "equity_change_2y",
+  "current_ratio_change_2y",
+  "simplified_form",
+  "no_prev_report",
+  "receivables_faster_than_revenue",
+  "payables_faster_than_revenue",
+  "loss",
+  "two_years_losses",
+  "negative_equity",
+  "revenue_drop_30",
+  "is_moscow_mo",
+  "okved_section",
+  "region_group"
+ ],
+ "psi_score_2024_vs_2022": 0.0008,
+ "levels_share_2024": {
+  "A": 0.6172,
+  "B": 0.2351,
+  "C": 0.1022,
+  "D": 0.0455
+ },
+ "mean_pd_2024": 0.01314
+}

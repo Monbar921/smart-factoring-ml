@@ -1,0 +1,253 @@
+{
+ "cuts": [
+  0.004,
+  0.015,
+  0.06
+ ],
+ "train": {
+  "n": 174351,
+  "defaults": 2182,
+  "rate": 0.012514984141186456,
+  "oof_gini": 0.8130948079019344
+ },
+ "test_12m": {
+  "n": 203674,
+  "defaults": 2523,
+  "rate": 0.012387442678005046,
+  "mean_pd": 0.013563915446251466,
+  "gini": 0.7606497200761817,
+  "gini_ci95": [
+   0.7465018866955746,
+   0.7737062254486035
+  ],
+  "segment_800m": {
+   "n": 39924,
+   "defaults": 536,
+   "gini": 0.8363069705297019,
+   "gini_ci95": [
+    0.8138516965827155,
+    0.8557233851908075
+   ]
+  },
+  "levels": [
+   {
+    "level": "A",
+    "n": 128855,
+    "defaults": 263,
+    "default_rate": 0.0020410538977920917,
+    "share": 0.6326531614246296
+   },
+   {
+    "level": "B",
+    "n": 46831,
+    "defaults": 449,
+    "default_rate": 0.009587666289423672,
+    "share": 0.22993116450798826
+   },
+   {
+    "level": "C",
+    "n": 18750,
+    "defaults": 483,
+    "default_rate": 0.02576,
+    "share": 0.09205887840372359
+   },
+   {
+    "level": "D",
+    "n": 9238,
+    "defaults": 1328,
+    "default_rate": 0.1437540593201992,
+    "share": 0.04535679566365859
+   }
+  ],
+  "levels_monotonic": true,
+  "decile_max_abs_gap_pp": 1.944518706655972,
+  "decile_default_rate_monotonic_share": 1.0
+ },
+ "test_21m": {
+  "n": 203674,
+  "defaults": 5575,
+  "rate": 0.02737217317870715,
+  "mean_pd": 0.013563915446251466,
+  "gini": 0.7250324876063574,
+  "gini_ci95": [
+   0.7153245823072971,
+   0.7344799428885459
+  ],
+  "segment_800m": {
+   "n": 39924,
+   "defaults": 1119,
+   "gini": 0.8077930036516532,
+   "gini_ci95": [
+    0.7911322434449465,
+    0.8248479721307669
+   ]
+  },
+  "levels": [
+   {
+    "level": "A",
+    "n": 128855,
+    "defaults": 720,
+    "default_rate": 0.005587676070001164,
+    "share": 0.6326531614246296
+   },
+   {
+    "level": "B",
+    "n": 46831,
+    "defaults": 1206,
+    "default_rate": 0.025752172706113474,
+    "share": 0.22993116450798826
+   },
+   {
+    "level": "C",
+    "n": 18750,
+    "defaults": 1249,
+    "default_rate": 0.06661333333333333,
+    "share": 0.09205887840372359
+   },
+   {
+    "level": "D",
+    "n": 9238,
+    "defaults": 2400,
+    "default_rate": 0.2597964927473479,
+    "share": 0.04535679566365859
+   }
+  ],
+  "levels_monotonic": true,
+  "decile_max_abs_gap_pp": 5.910940837727374,
+  "decile_default_rate_monotonic_share": 1.0
+ },
+ "psi_score": 0.005842139607368307,
+ "psi_features": {
+  "log_revenue": 0.0018688683033440602,
+  "log_assets": 0.0010181977575158911,
+  "age": 0.005540263133530021,
+  "net_margin": 0.0010346126565460882,
+  "debt_to_revenue": 0.001125136990558024,
+  "receivables_days": 0.0019576676481683594,
+  "payables_days": 0.00017890217231488473,
+  "equity_change_1y": 0.0029007282694053834,
+  "interest_coverage": 0.00045775344959631117,
+  "revenue_growth_1y": 0.014390706275968269,
+  "cash_ratio": 0.0014714018594308913,
+  "current_ratio": 0.0016299777407826274,
+  "equity_ratio": 0.0005864115211548792,
+  "current_ratio_change_1y": 0.00847424831521914,
+  "revenue_growth_2y": 0.00605357936770947,
+  "equity_change_2y": 0.0005334253583002711,
+  "current_ratio_change_2y": 0.001684040799212469
+ },
+ "leakage_audit": {
+  "gini_2023_default_quarter_1": {
+   "defaults": 363,
+   "gini": 0.7960444254883396
+  },
+  "gini_2023_default_quarter_2": {
+   "defaults": 925,
+   "gini": 0.8324447238574435
+  },
+  "gini_2023_default_quarter_3": {
+   "defaults": 616,
+   "gini": 0.6872599165826643
+  },
+  "gini_2023_default_quarter_4": {
+   "defaults": 619,
+   "gini": 0.7056407740175803
+  },
+  "cv_gini_all_features": 0.8130948079019344,
+  "cv_gini_without_net_margin": 0.8007589174192928,
+  "cv_gini_without_net_margin_and_cash_ratio": 0.7849088647519129,
+  "cv_gini_without_age_and_no_prev_report": 0.8027148031851699,
+  "single_feature_gini_2023_top": {
+   "net_margin": -0.5154245125728633,
+   "age": -0.435030038671244,
+   "equity_change_2y": -0.3915876207213944,
+   "equity_change_1y": -0.3838139665619633,
+   "interest_coverage": -0.26647381625348565,
+   "log_assets": -0.26141676611075826,
+   "revenue_growth_1y": -0.25353939563135375,
+   "revenue_growth_2y": -0.2414038945916892
+  },
+  "max_single_feature_abs_gini": 0.5154245125728633,
+  "gini_above_0_9": false,
+  "gini_by_default_type": {
+   "2023_12m__банкротство": {
+    "defaults": 820,
+    "gini": 0.7047982761645755
+   },
+   "2023_12m__исключение": {
+    "defaults": 1703,
+    "gini": 0.7875423706971545
+   },
+   "2022_oof__банкротство": {
+    "defaults": 826,
+    "gini": 0.7311489666587943
+   },
+   "2022_oof__исключение": {
+    "defaults": 1356,
+    "gini": 0.862930765649742
+   }
+  }
+ },
+ "top_shap": {
+  "net_margin": 0.4567,
+  "age": 0.3496,
+  "cash_ratio": 0.349,
+  "revenue_growth_1y": 0.1929,
+  "revenue_growth_2y": 0.1879,
+  "equity_ratio": 0.1727,
+  "receivables_days": 0.1377,
+  "log_assets": 0.1339,
+  "interest_coverage": 0.1333,
+  "okved_section": 0.1324
+ },
+ "model_comparison": [
+  {
+   "model": "LightGBM",
+   "cv_gini_mean": 0.8136416675437891,
+   "cv_gini_std": 0.014297079266215974,
+   "test12_gini": 0.7606775031099118,
+   "test21_gini": 0.7250667595495182,
+   "test12_ci_low": 0.7473172629231812,
+   "test12_ci_high": 0.7735001058306986,
+   "note": NaN,
+   "lgbm_minus_this_cv_mean": NaN,
+   "lgbm_better_in_folds": NaN
+  },
+  {
+   "model": "LogReg linear",
+   "cv_gini_mean": 0.7130678577146075,
+   "cv_gini_std": 0.018839756176331903,
+   "test12_gini": 0.670277377316217,
+   "test21_gini": 0.6511593249894057,
+   "test12_ci_low": 0.6539588339833549,
+   "test12_ci_high": 0.687382311537096,
+   "note": NaN,
+   "lgbm_minus_this_cv_mean": 0.1005738098291816,
+   "lgbm_better_in_folds": "5/5"
+  },
+  {
+   "model": "LogReg splines",
+   "cv_gini_mean": 0.7894062144067835,
+   "cv_gini_std": 0.02115604434085855,
+   "test12_gini": 0.7442848885835223,
+   "test21_gini": 0.7087027813719178,
+   "test12_ci_low": 0.7301293071354932,
+   "test12_ci_high": 0.7574026848061738,
+   "note": NaN,
+   "lgbm_minus_this_cv_mean": 0.024235453137005657,
+   "lgbm_better_in_folds": "5/5"
+  },
+  {
+   "model": "CatBoost",
+   "cv_gini_mean": 0.8068368854859184,
+   "cv_gini_std": 1.1102230246251565e-16,
+   "test12_gini": 0.7415719482456149,
+   "test21_gini": 0.7165604143618276,
+   "test12_ci_low": 0.7266340434146711,
+   "test12_ci_high": 0.7555338732294024,
+   "note": "CV from search (early stopping per fold); fold values not stored",
+   "lgbm_minus_this_cv_mean": NaN,
+   "lgbm_better_in_folds": NaN
+  }
+ ]
+}

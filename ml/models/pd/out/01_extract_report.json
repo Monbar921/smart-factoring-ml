@@ -1,0 +1,28 @@
+{
+ "rows_year_2022": 182685,
+ "dup_inn_2022": 0,
+ "filtered_2022": 182584,
+ "gate0_2022": {
+  "cohort_list": 182584,
+  "showcase_filtered": 182584,
+  "common": 182584,
+  "only_showcase": 0,
+  "only_list": 0
+ },
+ "raw_dup_inn_2022": 0,
+ "line_2120_notnull_2022": 180891,
+ "rows_out_2022": 182584,
+ "rows_year_2023": 210642,
+ "dup_inn_2023": 0,
+ "filtered_2023": 210511,
+ "gate0_2023": {
+  "cohort_list": 210511,
+  "showcase_filtered": 210511,
+  "common": 210511,
+  "only_showcase": 0,
+  "only_list": 0
+ },
+ "raw_dup_inn_2023": 0,
+ "line_2120_notnull_2023": 208593,
+ "rows_out_2023": 210511
+}
