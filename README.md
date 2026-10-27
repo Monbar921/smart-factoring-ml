@@ -29,7 +29,7 @@ from app.llm import backend_llm, LlmUnavailable
 
 try:
     text = backend_llm().chat([{"role": "system", "content": "..."}, {"role": "user", "content": "..."}],
-                              temperature=0.2, max_tokens=300).content
+                              temperature=0.2, max_tokens=300).content  # model="GigaChat-2-Pro" - необязательно
 except LlmUnavailable:
     text = None  # LLM выключена в backend (LLM_MODE не gigachat) или недоступна — работаем без неё
 ```

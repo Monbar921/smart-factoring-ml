@@ -53,6 +53,16 @@ def test_chat_goes_to_backend(backend):
                                  {"messages": [{"role": "user", "content": "Оцени"}], "temperature": 0.2, "maxTokens": 100})]
 
 
+def test_model_is_sent_only_when_given(backend):
+    backend.reply = (200, {"content": "ok", "model": "GigaChat-2-Pro"})
+
+    assert client(backend).chat([{"role": "user", "content": "x"}], model="GigaChat-2-Pro").model == "GigaChat-2-Pro"
+    client(backend).chat([{"role": "user", "content": "x"}], model="")
+
+    assert backend.requests[0][1]["model"] == "GigaChat-2-Pro"
+    assert "model" not in backend.requests[1][1]
+
+
 def test_disabled_llm_is_unavailable(backend):
     backend.reply = (503, {"code": "LLM_DISABLED", "message": "LLM выключена: LLM_MODE=stub", "details": {}})
 

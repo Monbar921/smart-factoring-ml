@@ -7,12 +7,13 @@
 
     try:
         answer = backend_llm().chat([{"role": "system", "content": "..."}, {"role": "user", "content": "..."}],
-                                    temperature=0.2, max_tokens=300)
+                                    temperature=0.2, max_tokens=300, model="GigaChat-2-Pro")  # model - необязательно
         text = answer.content
     except LlmUnavailable:
         text = None  # LLM выключена (LLM_MODE в backend не gigachat) или недоступна - работаем без неё
 
 Адрес - BACKEND_LLM_URL, по умолчанию http://backend:8080/internal/rest/llm.
+model не задана - модель стенда (GIGACHAT_MODEL в backend); доступные ключу - GET /internal/rest/llm/models.
 """
 
 import json
@@ -53,9 +54,15 @@ class BackendLlm:
         self.base_url = base_url.rstrip("/")
         self.timeout_s = timeout_s
 
-    def chat(self, messages: list[dict], temperature: float | None = None, max_tokens: int | None = None) -> LlmAnswer:
-        """messages - [{"role": "system" | "user" | "assistant", "content": "..."}], по порядку диалога."""
+    def chat(self, messages: list[dict], temperature: float | None = None, max_tokens: int | None = None,
+             model: str | None = None) -> LlmAnswer:
+        """messages - [{"role": "system" | "user" | "assistant", "content": "..."}], по порядку диалога.
+
+        model - модель GigaChat для этого запроса (например GigaChat-2-Pro); None или пусто - модель стенда.
+        """
         body = {"messages": messages}
+        if model:
+            body["model"] = model
         if temperature is not None:
             body["temperature"] = temperature
         if max_tokens is not None:
