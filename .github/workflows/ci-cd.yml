@@ -11,9 +11,9 @@ name: CI/CD
 #   secrets.DEPLOY_TOKEN - fine-grained PAT с доступом только к DEPLOY_REPO, Contents: Read and write
 on:
   push:
-    branches: [ "main", "test" ]
+    branches: [ "test" ]
   pull_request:
-    branches: [ "main", "test" ]
+    branches: [ "test" ]
   workflow_dispatch:
 
 # новый push в ту же ветку/PR отменяет незавершённую сборку предыдущего
