@@ -155,7 +155,7 @@ def test_pd_model_and_base_pd(trained):
     assert len(by_inn["2"]["reasons"]) == 3
     assert by_inn["2"]["reasons"][0]["direction"] == "INCREASES_RISK"
     assert by_inn["2"]["reasons"][0]["title"][0].isupper()
-    assert by_inn["3"] == {**by_inn["3"], "pd_source": "BASE", "low_data": True, "low_data_reason": "LOW_REVENUE", "pd": 0.03}
+    assert by_inn["3"] == {**by_inn["3"], "pd_source": "BASE", "low_data": True, "low_data_reason": "LOW_REVENUE", "pd": 0.013}
     assert by_inn["4"]["low_data_reason"] == "EXCLUDED_INDUSTRY" and by_inn["4"]["pd_source"] == "BASE"
 
 

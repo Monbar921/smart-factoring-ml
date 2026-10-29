@@ -46,6 +46,9 @@ class Buyer(BaseModel):
     region: str | None = None
     registration_date: date | None = None
     financials: list[Financials] = Field(default_factory=list)
+    # причина нехватки данных, если её знает источник (партии ML-команды: low_data_reason в buyers.csv);
+    # тогда она важнее вычисленной по отчётности (замечания 29.10, П3-5.1)
+    low_data_reason: Literal["NO_RECENT_REPORT", "LOW_REVENUE", "YOUNG_COMPANY"] | None = None
 
 
 class PdRequest(BaseModel):

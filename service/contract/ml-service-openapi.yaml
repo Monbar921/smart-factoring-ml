@@ -116,6 +116,13 @@ components:
           type: array
           description: Отчётность ГИР БО по годам, не позже даты снимка
           items: { $ref: "#/components/schemas/Financials" }
+        low_data_reason:
+          type: string
+          nullable: true
+          enum: [NO_RECENT_REPORT, LOW_REVENUE, YOUNG_COMPANY]
+          description: >-
+            Причина нехватки данных, если её знает источник (партии ML-команды). Тогда она важнее вычисленной по отчётности
+            и вместе с разделом ОКВЭД задаёт базовый PD
     Financials:
       type: object
       required: [year]

@@ -23,7 +23,12 @@ def report(buyer: Buyer, year: int) -> Financials | None:
 
 
 def low_data_reason(buyer: Buyer, calc_date: date) -> str | None:
-    """Базовый PD вместо модели (п. 4.2): нет отчётности за прошлый год, выручка ниже порога, компания моложе года."""
+    """Базовый PD вместо модели (п. 4.2): нет отчётности за прошлый год, выручка ниже порога, компания моложе года.
+
+    Причина из источника данных (Buyer.low_data_reason) важнее вычисленной: в партиях ML-команды отчётности нет совсем.
+    """
+    if buyer.low_data_reason is not None:
+        return buyer.low_data_reason
     last = report(buyer, calc_date.year - 1)
     if last is None:
         return "NO_RECENT_REPORT"
