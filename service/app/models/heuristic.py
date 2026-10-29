@@ -10,9 +10,21 @@ from datetime import date
 from ..features import buyer_items, discipline, low_data_reason, pair_items, pd_features
 from ..schemas import Buyer, DelayRequest, DelayResult, PdResult, Reason
 
-# базовый PD по разделу ОКВЭД (п. 4.2: «мало данных»), условные значения
-BASE_PD_BY_SECTION = {"F": 0.05, "C": 0.03, "G": 0.03, "H": 0.035, "M": 0.03}
-BASE_PD_DEFAULT = 0.035
+# Базовый PD «мало данных» (п. 4.2) по причине нехватки данных и разделу ОКВЭД: доля дефолтов за 12 месяцев в выборке
+# для обучения модели PD (замечания ML-команды 29.10, П3-5.2). Ключ None - остальные разделы.
+BASE_PD = {
+    "YOUNG_COMPANY": {None: 0.055},
+    "NO_RECENT_REPORT": {"F": 0.035, "G": 0.026, "C": 0.008, "M": 0.017, "H": 0.023, None: 0.022},
+    "LOW_REVENUE": {"F": 0.022, "G": 0.013, "C": 0.007, "M": 0.009, "H": 0.013, None: 0.012},
+}
+# разделы K и O, на которых модель PD не обучена (EXCLUDED_INDUSTRY): прежнее условное значение
+BASE_PD_EXCLUDED_INDUSTRY = 0.035
+
+
+def base_pd(reason: str, okved_section: str | None) -> float:
+    """Базовый PD по причине нехватки данных и разделу ОКВЭД; неизвестная причина - как «нет отчётности»."""
+    table = BASE_PD.get(reason, BASE_PD["NO_RECENT_REPORT"])
+    return table.get((okved_section or "").upper(), table[None])
 
 
 def sigmoid(value: float) -> float:
@@ -64,7 +76,7 @@ class HeuristicPdModel:
         ]
         reason = low_data_reason(buyer, calc_date)
         if reason is not None:
-            base = BASE_PD_BY_SECTION.get(buyer.okved_section or "", BASE_PD_DEFAULT)
+            base = base_pd(reason, buyer.okved_section)
             return PdResult(inn=buyer.inn, status="SCORED", pd=base, pd_source="BASE", low_data=True, low_data_reason=reason,
                             reasons=reasons)
         logit = self.INTERCEPT + sum(item[2] for item in contributions)

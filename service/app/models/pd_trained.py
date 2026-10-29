@@ -19,7 +19,7 @@ import pandas as pd
 from .. import features
 from ..schemas import Buyer, PdResult, Reason
 from . import _pickle
-from .heuristic import BASE_PD_BY_SECTION, BASE_PD_DEFAULT, HeuristicPdModel
+from .heuristic import BASE_PD_EXCLUDED_INDUSTRY, HeuristicPdModel
 from .pd.pd_features import LINES
 from .pd.pd_model import PDModel
 
@@ -68,7 +68,7 @@ class TrainedPdModel:
                 results[buyer.inn] = self.base.score([buyer], calc_date)[0]
             elif (buyer.okved_section or "").upper() in EXCLUDED_SECTIONS:
                 results[buyer.inn] = PdResult(
-                    inn=buyer.inn, status="SCORED", pd=BASE_PD_BY_SECTION.get(buyer.okved_section.upper(), BASE_PD_DEFAULT),
+                    inn=buyer.inn, status="SCORED", pd=BASE_PD_EXCLUDED_INDUSTRY,
                     pd_source="BASE", low_data=True, low_data_reason="EXCLUDED_INDUSTRY")
             else:
                 scored.append(buyer)

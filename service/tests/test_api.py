@@ -37,8 +37,34 @@ def test_pd_model_and_base_pd():
     assert weak["pd"] > strong["pd"]
     assert len(weak["reasons"]) == 3
     assert weak["reasons"][0]["direction"] == "INCREASES_RISK"
-    assert small == {**small, "pd_source": "BASE", "low_data": True, "low_data_reason": "LOW_REVENUE", "pd": 0.03}
+    assert small == {**small, "pd_source": "BASE", "low_data": True, "low_data_reason": "LOW_REVENUE", "pd": 0.013}
     assert old["low_data_reason"] == "NO_RECENT_REPORT"
+    # производство, нет отчётности за прошлый год - 0,8 % (доля дефолтов выборки ML-команды, П3-5.2)
+    assert old["pd"] == 0.008
+
+
+def test_base_pd_by_reason_from_source():
+    # причина из источника (low_data_reason в buyers.csv партии) важнее вычисленной: отчётности в партиях нет вовсе
+    response = client.post("/v1/pd/score", json={
+        "calc_date": "2026-10-24",
+        "buyers": [
+            {"inn": "1", "okved_section": "F", "low_data_reason": "YOUNG_COMPANY"},
+            {"inn": "2", "okved_section": "C", "low_data_reason": "YOUNG_COMPANY"},
+            {"inn": "3", "okved_section": "F", "low_data_reason": "LOW_REVENUE"},
+            {"inn": "4", "okved_section": "C", "low_data_reason": "LOW_REVENUE"},
+            {"inn": "5", "okved_section": "J", "low_data_reason": "LOW_REVENUE"},
+            {"inn": "6", "okved_section": "G"},
+            {"inn": "7", "okved_section": "R"},
+        ],
+    }).json()
+
+    got = {item["inn"]: (item["low_data_reason"], item["pd"]) for item in response["results"]}
+    assert got == {
+        "1": ("YOUNG_COMPANY", 0.055), "2": ("YOUNG_COMPANY", 0.055),
+        "3": ("LOW_REVENUE", 0.022), "4": ("LOW_REVENUE", 0.007), "5": ("LOW_REVENUE", 0.012),
+        # без причины и без отчётности - «нет отчётности» по разделу
+        "6": ("NO_RECENT_REPORT", 0.026), "7": ("NO_RECENT_REPORT", 0.022),
+    }
 
 
 def history(client_inn, buyer_inn, planned, paid=None, status="PAID"):
